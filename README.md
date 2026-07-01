@@ -1,75 +1,67 @@
 # wikiR
 
-> Local-first personal wiki and document reuse harness for Obsidian, Agents, and local LLM workflows.
+[简体中文](docs/zh/README.md) | [Developer guide](docs/en/developer.md)
 
-wikiR is an open-source template for maintaining a local-first personal knowledge vault. It separates raw materials, source cards, durable notes, projects, outputs, prompts, and retrieval evaluation so a local agent can curate and reuse knowledge without turning the whole system into an opaque LLM workflow.
+wikiR is a local-first template for building an agent-maintained personal knowledge vault. It is designed for Obsidian, Hermes-style local agents, and local LLM workflows.
 
-wikiR 是一个本地优先的个人 wiki / 材料库开源模板，面向 Obsidian、Agents、本地 Qwen 35B MoE 等本地智能体工作流。它把原始材料、源卡、长期笔记、项目、输出、提示词和检索评估拆开，让本地智能体能够可追溯地整理和复用材料。
+The project provides a vault structure, an agent contract, prompt profiles, and an inspectable retrieval harness so your materials can be curated, searched, and reused without relying on a cloud knowledge base.
 
-## Documentation / 文档
+## Why wikiR
 
-- English: [docs/en/README.md](docs/en/README.md)
-- 中文：[docs/zh/README.md](docs/zh/README.md)
+- Local first: raw materials and notes stay in your vault by default.
+- Agent maintained: users work in natural language while the agent calls tools in the background.
+- Obsidian compatible: notes are plain Markdown with flat YAML properties and wikilinks.
+- Evidence oriented: raw materials become traceable source cards before they are reused.
+- Retrieval aware: search context and retrieval checks are part of the workflow, not an afterthought.
+- Extensible: lexical retrieval works out of the box, and local embeddings or rerankers can be added later.
 
-## Repository Model / 仓库模式
+## How It Works
 
-Use this repository as the public template and harness project. Use another private repository as your real personal vault.
-
-建议把当前仓库作为公开模板和工具仓库维护；真实个人资料库放在另一个私有仓库中。
-
-- English workflow: [docs/en/open-source-template-and-private-vault.md](docs/en/open-source-template-and-private-vault.md)
-- 中文流程：[docs/zh/open-source-template-and-private-vault.md](docs/zh/open-source-template-and-private-vault.md)
-
-## Quick Start / 快速开始
-
-For the public template:
-
-```sh
-git clone <PUBLIC_WIKIR_REPO_URL> wikiR
-cd wikiR
+```text
+raw materials
+  -> source cards
+  -> durable notes
+  -> retrieval context
+  -> grounded drafts and outputs
 ```
 
-To create a private working vault:
+Users should not need to run maintenance commands manually. A local agent reads `AGENTS.md`, calls wikiR tools defined in `harness/tool_manifest.json`, and writes curated notes or outputs back into the vault.
 
-```sh
-cd /path/to/workspace
-git clone <PUBLIC_WIKIR_REPO_URL> my-wikiR
-cd my-wikiR
-git remote rename origin upstream
-git remote add origin <PRIVATE_WIKIR_VAULT_REPO_URL>
-git push -u origin main
-```
+## Core Layout
 
-Open `my-wikiR` in Obsidian and use it as the Agents working directory.
+- `00_Inbox/materials/`: raw material inbox.
+- `01_Sources/`: source cards generated from raw materials.
+- `02_Notes/`: durable notes and reusable knowledge.
+- `03_Projects/`: active project workspaces.
+- `04_Outputs/`: drafts, proposals, reports, and other deliverables.
+- `80_Attachments/`: Obsidian attachments.
+- `90_System/`: prompts, templates, indexes, eval cases, context, and logs.
+- `harness/`: agent-facing tools and local implementation.
 
-## Agent Runtime / 智能体运行方式
+## Typical Use
 
-Users should work through natural language. The local agent runtime should call wikiR tools automatically through `harness/tool_manifest.json`.
+1. Create a private vault from this template.
+2. Open the private vault in Obsidian.
+3. Set Hermes or another local agent to use the vault as its working directory.
+4. Add new materials to `00_Inbox/materials/`.
+5. Ask the agent to curate materials, find reusable evidence, or draft an output.
 
-用户不需要日常进入 terminal 运行 Python 命令。Hermes 或其他本地智能体应该读取 `AGENTS.md`，并通过 `harness/tool_manifest.json` 自动调用 wikiR 工具。
+Example requests:
 
-- English: [docs/en/agent-runtime.md](docs/en/agent-runtime.md)
-- 中文：[docs/zh/agent-runtime.md](docs/zh/agent-runtime.md)
+- "I added new materials. Please curate them."
+- "Find reusable materials related to this project."
+- "Draft a proposal from the existing vault materials."
+- "Check whether this vault has broken links or retrieval issues."
 
-## Core Layout / 核心目录
+## Documentation
 
-- `00_Inbox/materials/`: raw material inbox / 原始材料入口
-- `01_Sources/`: source cards / 源卡
-- `02_Notes/`: durable notes / 长期笔记
-- `03_Projects/`: project workspaces / 项目工作区
-- `04_Outputs/`: deliverables / 成稿输出
-- `80_Attachments/`: Obsidian attachments / Obsidian 附件
-- `90_System/`: prompts, templates, indexes, evals, logs / 提示词、模板、索引、评估、日志
-- `harness/`: agent-facing tool layer and local implementation / 面向智能体的工具层和本地实现
+- [Architecture](docs/en/architecture.md)
+- [Agent runtime integration](docs/en/agent-runtime.md)
+- [Open-source template and private vault workflow](docs/en/open-source-template-and-private-vault.md)
+- [Developer guide](docs/en/developer.md)
 
-## Safety / 安全边界
+## Safety Defaults
 
 The default `.gitignore` excludes raw materials, attachments, generated indexes, generated context, logs, secrets, and local Obsidian workspace state. This keeps the public template safe by default.
 
-默认 `.gitignore` 会忽略原始材料、附件、生成索引、生成上下文、日志、密钥和 Obsidian 本地状态，避免公开模板误提交私人内容。
-
-## Developer Debugging / 开发者调试
-
-The CLI remains as a deterministic implementation and debugging fallback. It is not the intended daily user interface.
-
-CLI 仍然保留，目的是给开源项目提供可测试、可调试的确定性实现，不是日常用户入口。
+For real personal use, maintain this repository as a public template and keep your actual vault in a separate private repository.
