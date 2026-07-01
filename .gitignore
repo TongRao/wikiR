@@ -1,0 +1,57 @@
+# macOS / editor noise
+.DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/
+
+# Python / local runtime noise
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Secrets and local credentials
+.env
+.env.*
+*.pem
+*.key
+*.token
+*.secret
+
+# Obsidian local state.
+# Keep shared vault settings minimal and portable.
+.obsidian/*
+!.obsidian/
+!.obsidian/app.json
+
+# Raw intake materials are private/large evidence files.
+# Track only the folder placeholder.
+00_Inbox/materials/*
+!00_Inbox/materials/.gitkeep
+
+# Temporary triage workspace.
+00_Inbox/triage/*
+!00_Inbox/triage/.gitkeep
+
+# Attachments often contain original documents or private media.
+# Track only the folder placeholder by default.
+80_Attachments/*
+!80_Attachments/.gitkeep
+
+# Generated retrieval artifacts.
+90_System/index/*
+!90_System/index/.gitkeep
+90_System/context/*
+!90_System/context/.gitkeep
+90_System/logs/*
+!90_System/logs/.gitkeep
+
+# Local model or agent scratch space if added later.
+.cache/
+.local/
+tmp/
+temp/

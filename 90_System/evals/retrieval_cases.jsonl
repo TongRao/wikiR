@@ -1,0 +1,2 @@
+{"query":"本地个人 wiki 文档管理 agent LLM 检索复用", "must_include":["01_Sources/wikiR-initial-idea.md", "02_Notes/wikiR-system-design-principles.md"], "notes":"初始系统目标应能被检索到"}
+{"query":"原始材料 源卡 可追溯 本地优先", "must_include":["02_Notes/wikiR-system-design-principles.md"], "notes":"架构原则应能解释材料治理方式"}
