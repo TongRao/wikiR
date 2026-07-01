@@ -27,7 +27,6 @@ If you only maintain the open-source template:
 ```sh
 git clone <PUBLIC_WIKIR_REPO_URL> wikiR
 cd wikiR
-python3 harness/wiki.py doctor
 ```
 
 If you want to create a real private vault:
@@ -43,30 +42,18 @@ git push -u origin main
 
 Then open `wikiR-private` in Obsidian and use it as the Hermes working directory.
 
-## Common Commands
+## Agent Tool Workflow
 
-```sh
-# Initialize or repair required directories
-python3 harness/wiki.py init
+The normal wikiR workflow should not require users to open a terminal and run commands. Hermes or another local agent runtime should call tools automatically.
 
-# Scan 00_Inbox/materials and create source cards in 01_Sources
-python3 harness/wiki.py ingest
+Tool definitions live in `harness/tool_manifest.json`, and the low-level adapter is `harness/wiki_tool.py`. Users should make natural-language requests:
 
-# Build the local text index for Sources / Notes / Projects / Outputs
-python3 harness/wiki.py build-index
+- "I added new materials. Please curate them."
+- "Find reusable materials related to this project."
+- "Draft a proposal from existing materials."
+- "Check whether this vault has broken links or index issues."
 
-# Search from the command line
-python3 harness/wiki.py search "your question or task"
-
-# Generate a context file for the local model
-python3 harness/wiki.py context "your question or task"
-
-# Check frontmatter, broken links, and index freshness
-python3 harness/wiki.py doctor
-
-# Run retrieval regression tests from 90_System/evals/retrieval_cases.jsonl
-python3 harness/wiki.py eval
-```
+For details, see: [Agent Runtime Integration](agent-runtime.md).
 
 ## Directory Convention
 
@@ -81,12 +68,13 @@ python3 harness/wiki.py eval
 
 ## Hermes / Local Model Integration
 
-Hermes or another local agent runner only needs to follow `AGENTS.md`:
+Hermes or another local agent runner should follow `AGENTS.md` and bind the wikiR tools:
 
-- Call `ingest` before curating new materials.
-- Call `build-index` and `context` before writing.
-- Call `doctor` after important changes.
-- When retrieval quality degrades, add cases to `90_System/evals/retrieval_cases.jsonl` and run `eval`.
+- Call `wiki_ingest` before curating new materials.
+- Call `wiki_build_index` and `wiki_context` before writing.
+- Call `wiki_search` for material lookup.
+- Call `wiki_doctor` after important changes.
+- When retrieval quality degrades, add cases to `90_System/evals/retrieval_cases.jsonl` and call `wiki_eval`.
 
 The current harness is a zero-dependency lexical retrieval baseline. It is intentionally simple and inspectable. Local embeddings or rerankers can be added later without changing the vault structure.
 
@@ -101,4 +89,5 @@ The current harness is a zero-dependency lexical retrieval baseline. It is inten
 ## More Documentation
 
 - [Architecture](architecture.md)
+- [Agent Runtime Integration](agent-runtime.md)
 - [Open Source Template + Private Vault Workflow](open-source-template-and-private-vault.md)

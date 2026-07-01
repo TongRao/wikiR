@@ -63,8 +63,9 @@ git push -u origin main
 cd /Users/tongrao/Desktop/project/wikiR-private
 git fetch upstream
 git merge upstream/main
-python3 harness/wiki.py doctor
 ```
+
+合并后，让 Hermes 或本地 agent 调用 `wiki_doctor` 检查 vault 状态。
 
 如果你想保持更干净的历史，也可以用 `git rebase upstream/main` 代替 merge。
 

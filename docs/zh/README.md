@@ -27,7 +27,6 @@ wikiR 是一个本地优先的个人 wiki / 材料库开源模板，面向 Obsid
 ```sh
 git clone <PUBLIC_WIKIR_REPO_URL> wikiR
 cd wikiR
-python3 harness/wiki.py doctor
 ```
 
 如果你要创建真实使用的私有 vault：
@@ -43,30 +42,18 @@ git push -u origin main
 
 然后用 Obsidian 打开 `wikiR-private`，把 Hermes 的工作目录也设为这个私有 vault。
 
-## 常用命令
+## Agent 工具工作流
 
-```sh
-# 初始化/补齐目录
-python3 harness/wiki.py init
+wikiR 的正常使用方式不是让用户进入 terminal 运行命令，而是让 Hermes 或其他本地 agent runtime 自动调用工具。
 
-# 扫描 00_Inbox/materials，生成 01_Sources 源卡
-python3 harness/wiki.py ingest
+工具定义在 `harness/tool_manifest.json`，底层适配器是 `harness/wiki_tool.py`。用户只需要用自然语言提出需求：
 
-# 为 Sources / Notes / Projects / Outputs 建本地文本索引
-python3 harness/wiki.py build-index
+- “我放了新材料，请整理。”
+- “帮我找一下和某个项目相关的可复用材料。”
+- “基于已有材料写一份申报书草稿。”
+- “检查一下这个 vault 有没有断链或索引问题。”
 
-# 命令行检索
-python3 harness/wiki.py search "你的问题或任务"
-
-# 生成给本地模型使用的上下文文件
-python3 harness/wiki.py context "你的问题或任务"
-
-# 检查 frontmatter、断链、索引新鲜度
-python3 harness/wiki.py doctor
-
-# 用 90_System/evals/retrieval_cases.jsonl 做检索回归测试
-python3 harness/wiki.py eval
-```
+详细集成说明见：[Agent 运行时集成](agent-runtime.md)。
 
 ## 目录约定
 
@@ -81,12 +68,13 @@ python3 harness/wiki.py eval
 
 ## Hermes / 本地模型接入
 
-Hermes 或其他本地 agent runner 只需要遵守 `AGENTS.md`：
+Hermes 或其他本地 agent runner 需要遵守 `AGENTS.md`，并绑定 wikiR 工具：
 
-- 整理材料前调用 `ingest`。
-- 写作前调用 `build-index` 和 `context`。
-- 重要变更后调用 `doctor`。
-- 检索质量变差时补充 `90_System/evals/retrieval_cases.jsonl`，再跑 `eval`。
+- 整理材料前调用 `wiki_ingest`。
+- 写作前调用 `wiki_build_index` 和 `wiki_context`。
+- 查找资料时调用 `wiki_search`。
+- 重要变更后调用 `wiki_doctor`。
+- 检索质量变差时补充 `90_System/evals/retrieval_cases.jsonl`，再调用 `wiki_eval`。
 
 当前 harness 是零第三方依赖的词面检索基线，适合作为可解释底座。后续可以加入本地 embedding 或 reranker，但不需要改变 vault 目录结构。
 
@@ -101,4 +89,5 @@ Hermes 或其他本地 agent runner 只需要遵守 `AGENTS.md`：
 ## 更多文档
 
 - [架构说明](architecture.md)
+- [Agent 运行时集成](agent-runtime.md)
 - [公开模板与私有 Vault 工作流](open-source-template-and-private-vault.md)

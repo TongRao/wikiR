@@ -4,9 +4,7 @@
 
 ## 必须遵守
 
-1. 写作前先使用 harness 检索上下文：
-   - `python3 harness/wiki.py build-index`
-   - `python3 harness/wiki.py context "<用户任务>"`
+1. 写作前先调用 wikiR 工具检索上下文：`wiki_build_index`，然后 `wiki_context`。
 2. 优先使用 `90_System/context/last_context.md` 中的材料。
 3. 对关键事实、数据、经历、项目背景、既有表述，给出源卡或笔记链接。
 4. 如果检索结果不足，先列出缺口，再继续写可确定的部分。

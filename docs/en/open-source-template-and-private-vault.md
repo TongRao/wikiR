@@ -63,8 +63,9 @@ When the public template improves:
 cd /Users/tongrao/Desktop/project/wikiR-private
 git fetch upstream
 git merge upstream/main
-python3 harness/wiki.py doctor
 ```
+
+After merging, ask Hermes or your local agent to call `wiki_doctor` and check the vault state.
 
 If you want a cleaner history, use `git rebase upstream/main` instead of merge.
 
