@@ -1,14 +1,14 @@
 # Open Source Template + Private Vault Workflow
 
-This repository should be maintained as the open-source wikiR template and harness project. It should not be the real private vault.
+This repository should be maintained as the open-source wikiR template. It should not be the real private vault.
 
 ## Recommended Split
 
 Use two repositories:
 
 - Public repository: `wikiR`
-  - Purpose: architecture, harness, prompts, templates, docs, and eval examples.
-  - Do not commit real raw materials, private attachments, generated context, indexes, logs, or secrets.
+  - Purpose: vault structure, agent contract, prompts, templates, docs, and safe examples.
+  - Do not commit real raw materials, private attachments, generated scratch files, logs, or secrets.
 - Private repository: your actual personal vault.
   - Purpose: real source cards, notes, project drafts, outputs, and optionally raw materials.
   - Can pull improvements from the public template.
@@ -22,10 +22,9 @@ Track:
 - `.gitignore`
 - `.gitattributes`
 - `.obsidian/app.json`
-- `harness/`
 - `90_System/prompts/`
 - `90_System/templates/`
-- `90_System/evals/`
+- `docs/`
 - Example notes or demo source cards that contain no private data.
 
 Ignore:
@@ -33,8 +32,6 @@ Ignore:
 - `00_Inbox/materials/`
 - `00_Inbox/triage/`
 - `80_Attachments/`
-- `90_System/index/`
-- `90_System/context/`
 - `90_System/logs/`
 - `.env*`
 - local Obsidian workspace state.
@@ -45,29 +42,27 @@ After the public repo is pushed, create a private working vault in another direc
 
 ```sh
 cd /Users/tongrao/Desktop/project
-git clone <PUBLIC_WIKIR_REPO_URL> wikiR-private
-cd wikiR-private
+git clone <PUBLIC_WIKIR_REPO_URL> my-wikiR
+cd my-wikiR
 git remote rename origin upstream
 git remote add origin <PRIVATE_WIKIR_VAULT_REPO_URL>
 git branch -M main
 git push -u origin main
 ```
 
-Then use `/Users/tongrao/Desktop/project/wikiR-private` as your Obsidian vault and Hermes working directory.
+Then use `/Users/tongrao/Desktop/project/my-wikiR` as your Obsidian vault and Hermes working directory.
 
 ## Keeping Template Updates
 
 When the public template improves:
 
 ```sh
-cd /Users/tongrao/Desktop/project/wikiR-private
+cd /Users/tongrao/Desktop/project/my-wikiR
 git fetch upstream
 git merge upstream/main
 ```
 
-After merging, ask Hermes or your local agent to call `wiki_doctor` and check the vault state.
-
-If you want a cleaner history, use `git rebase upstream/main` instead of merge.
+After merging, ask Hermes or your local agent to inspect the vault for broken links, missing metadata, and unsupported claims.
 
 ## Managing Real Materials In The Private Repo
 
@@ -124,11 +119,9 @@ Run these in the public template repo:
 ```sh
 git status --short --ignored
 git check-ignore -v 00_Inbox/materials/*
-git check-ignore -v 90_System/context/last_context.md
-git check-ignore -v 90_System/index/wiki_index.jsonl
 ```
 
-Only ignored files should include private materials and generated artifacts.
+Only ignored files should include private materials and local artifacts.
 
 Before committing publicly, inspect staged files:
 

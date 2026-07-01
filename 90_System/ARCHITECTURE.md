@@ -14,40 +14,22 @@ Full bilingual documentation:
 
 ```mermaid
 flowchart LR
-  A["00_Inbox/materials<br/>raw files"] --> B["harness ingest"]
-  B --> C["01_Sources<br/>source cards"]
-  C --> D["human / local LLM curation"]
-  D --> E["02_Notes<br/>durable notes"]
-  E --> F["harness build-index"]
-  C --> F
-  F --> G["harness context"]
-  G --> H["local model writing"]
-  H --> I["04_Outputs"]
-  F --> J["harness eval / doctor"]
+  A["00_Inbox/materials<br/>raw files / 原始文件"] --> B["Hermes or local agent<br/>reads and curates / 读取并整理"]
+  B --> C["01_Sources<br/>source cards / 源卡"]
+  C --> D["02_Notes<br/>durable notes / 长期笔记"]
+  C --> E["03_Projects<br/>project workspaces / 项目工作区"]
+  D --> F["agent search and synthesis<br/>智能体搜索和综合"]
+  E --> F
+  F --> G["04_Outputs<br/>grounded outputs / 有依据的输出"]
+  B --> H["90_System<br/>prompts and templates / 提示词和模板"]
 ```
 
-## Why This Shape / 为什么这样设计
+## Design Choice / 设计选择
 
-- Raw files and source cards are separated, so evidence remains traceable.
-- Long-term notes are separated from project drafts, so the wiki stays reusable.
-- Retrieval context is generated before writing, so the model works from inspectable evidence.
-- Evaluation cases live in the vault, so search quality can be improved over time.
-- 原始文件和源卡分离，证据链可追溯。
-- 长期笔记和项目草稿分离，wiki 不会被一次性任务污染。
-- 写作前先生成检索上下文，模型基于可检查证据工作。
-- 评估用例保存在 vault 中，检索质量可以持续回归测试。
+wikiR is a vault structure and agent operating contract, not a Python harness.
 
-## Future Retrieval Layers / 检索层演进
+wikiR 是 vault 结构和智能体操作契约，不是 Python harness。
 
-Current retrieval is deterministic BM25-style lexical search with Chinese character n-grams and English tokens. This is the baseline.
+Document parsing, OCR, search, and model inference belong to Hermes or the chosen local runtime.
 
-Future layers can be added without changing note structure:
-
-1. Local embedding recall over the same chunks.
-2. Local reranker for the top 30-100 candidates.
-3. Query expansion from the local model, logged into `90_System/logs/`.
-4. Task-specific eval sets for proposals, reports, product specs, and research notes.
-
-当前检索是确定性的 BM25 风格词面搜索，支持中文字符 n-gram 和英文 token。这是可解释的基线。
-
-后续可以在不改变笔记结构的情况下加入本地 embedding 召回、本地 reranker、query expansion 和任务型评估集。
+文档解析、OCR、搜索和模型推理属于 Hermes 或选定的本地运行时职责。

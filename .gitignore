@@ -42,11 +42,7 @@ venv/
 80_Attachments/*
 !80_Attachments/.gitkeep
 
-# Generated retrieval artifacts.
-90_System/index/*
-!90_System/index/.gitkeep
-90_System/context/*
-!90_System/context/.gitkeep
+# Local agent logs.
 90_System/logs/*
 !90_System/logs/.gitkeep
 

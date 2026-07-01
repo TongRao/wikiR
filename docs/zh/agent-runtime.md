@@ -1,64 +1,54 @@
-# Agent 运行时集成
+# Agent 操作协议
 
-wikiR 的正常使用方式不是让用户打开终端运行一堆 Python 命令，而是：
+wikiR 预期由 Hermes 这类本地 agent runtime 维护。它不再提供自制文档解析器、索引器或 Python harness。
 
-1. 用户在 Obsidian 或 Hermes 中用自然语言提出需求。
-2. Hermes 根据 `AGENTS.md` 判断需要哪些 wikiR 工具。
-3. Hermes 调用 `harness/tool_manifest.json` 中定义的工具。
-4. 工具层在后台维护源卡、索引、上下文和评估结果。
-5. 用户只看到整理后的笔记、检索依据、草稿或检查结果。
+## 运行时职责
 
-## 工具清单
+本地智能体运行时应该提供或调用：
 
-工具定义在：
+- Markdown、PDF、Word、表格、纯文本等文件读取能力；
+- 扫描件或不可直接读取文件的 OCR / 转换能力；
+- 对笔记和原始材料的 vault 级搜索能力；
+- Markdown 编辑能力；
+- 链接和元数据检查能力；
+- 默认本地执行，除非用户明确允许联网。
 
-```text
-harness/tool_manifest.json
-```
+## 正常流程
 
-底层适配器是：
+1. 用户在 Obsidian、Hermes 或其他本地界面中用自然语言提出需求。
+2. 智能体读取 `AGENTS.md` 和 `90_System/prompts/` 中的相关提示词。
+3. 智能体用运行时原生能力直接读取原始材料或已有笔记。
+4. 智能体使用 `90_System/templates/` 创建源卡、长期笔记、项目草稿或输出。
+5. 智能体说明使用了哪些证据，以及是否存在提取或搜索限制。
 
-```text
-python3 harness/wiki_tool.py
-```
+## 材料整理
 
-这不是给普通用户手动输入的日常命令，而是给 Hermes 这类 agent runtime 绑定工具时使用的入口。
+当用户把材料放入 `00_Inbox/materials/` 时，智能体应该：
 
-## 工具调用语义
+1. 用可用的最佳本地方式读取每个新文件；
+2. 在 `01_Sources/` 中为每个有意义来源创建一张源卡；
+3. 保留 `source_path`、提取状态和短摘录；
+4. 提取可复用事实、论点、约束、案例和写作片段；
+5. 只把跨项目稳定知识沉淀到 `02_Notes/`；
+6. 除非用户明确同意，不移动、不删除原始文件。
 
-- `wiki_ingest`：当用户说“我放了新材料，请整理”时自动调用。
-- `wiki_build_index`：检索、写作、评估前自动调用。
-- `wiki_search`：用户询问资料、查找证据、寻找可复用材料时调用。
-- `wiki_context`：用户要求写申报书、方案、报告、总结时调用。
-- `wiki_doctor`：大改目录、生成大量笔记、准备提交前调用。
-- `wiki_eval`：检索质量异常或修改检索逻辑后调用。
+## 检索和写作
 
-## Hermes 系统提示词建议
+对于申报书、方案、报告、总结等需要复用材料的任务，智能体应该：
 
-把下面这段作为 Hermes 项目级 system prompt 或工作区说明：
+1. 搜索 `01_Sources/`、`02_Notes/`、`03_Projects/`、`04_Outputs/` 和相关原始材料；
+2. 直接读取最相关的材料；
+3. 基于证据写作，而不是只靠模型记忆；
+4. 尽量引用源卡或笔记；
+5. 在补全缺口前先说明缺少哪些材料或哪些文件读取失败。
 
-```text
-你正在维护一个 wikiR vault。用户不应该手动运行 harness 命令；你需要在后台调用 wikiR 工具。
+## 失败处理
 
-工作目录是当前 vault 根目录。先阅读 AGENTS.md、harness/tool_manifest.json 和 90_System/prompts/。
+如果运行时无法读取某个文件：
 
-处理新材料时，调用 wiki_ingest，再整理 01_Sources 中的源卡，必要时沉淀到 02_Notes。
+- 不要编造内容；
+- 在源卡或回复中记录失败情况；
+- 必要时要求用户提供转换后或 OCR 后的文件；
+- 保持原始文件原地不动。
 
-回答资料查找类问题时，先调用 wiki_build_index，再调用 wiki_search。
-
-写申报书、方案、报告、总结等复用型任务时，先调用 wiki_build_index，再调用 wiki_context，读取 90_System/context/last_context.md 后再写作。
-
-重要修改后调用 wiki_doctor；修改检索逻辑或 eval cases 后调用 wiki_eval。
-
-不要上传文件，不要删除原始材料，不要把检索不到的内容编造成事实。
-```
-
-## 调试方式
-
-如果 Hermes 的工具绑定还没有配置好，开发者可以临时用 JSON 方式验证工具层：
-
-```sh
-python3 harness/wiki_tool.py '{"tool":"wiki_search","args":{"query":"本地知识库 申报书","top_k":5}}'
-```
-
-这只是调试手段，不是最终用户工作流。
+例如，扫描版 PDF 可能需要 OCR，旧版 `.doc` 可能需要先转成 `.docx`，或者依赖运行时自己的文档读取支持。

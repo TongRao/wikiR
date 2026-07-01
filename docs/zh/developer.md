@@ -2,16 +2,16 @@
 
 [English](../en/developer.md) | [README](README.md)
 
-这份文档面向维护者，以及需要把 wikiR 接入 Hermes 等本地 agent runtime 的人。公开 README 会尽量面向普通用户；实现细节、私有 vault 搭建和调试说明放在这里。
+这份文档面向 wikiR 模板维护者。wikiR 有意保持为 vault 协议和文档项目，而不是自制 Python harness。
 
 ## 仓库策略
 
 建议使用两个仓库：
 
-- 公开模板仓库：维护架构、harness、提示词、模板、示例和文档。
+- 公开模板仓库：维护文件夹结构、智能体工作契约、提示词、模板、示例和文档。
 - 私有 vault 仓库：存放真实源卡、笔记、项目输出，以及可选的原始材料。
 
-公开仓库不应该包含私人材料、生成索引、生成上下文、日志、密钥或 Obsidian 本地工作区状态。
+公开仓库不应该包含私人材料、私人附件、生成草稿、日志、密钥或 Obsidian 本地工作区状态。
 
 ## 创建私有 Vault
 
@@ -36,72 +36,41 @@ git fetch upstream
 git merge upstream/main
 ```
 
-合并后，让 Hermes 或本地 agent 调用 `wiki_doctor`。
-
-## Agent 工具层
-
-工具定义在：
-
-```text
-harness/tool_manifest.json
-```
-
-JSON 适配器是：
-
-```text
-harness/wiki_tool.py
-```
-
-Hermes 或其他 runtime 应该绑定这些工具，并在后台自动调用。用户通常只需要自然语言提出需求，不应该日常进入 terminal 运行命令。
-
-工具名：
-
-- `wiki_init`
-- `wiki_ingest`
-- `wiki_build_index`
-- `wiki_search`
-- `wiki_context`
-- `wiki_doctor`
-- `wiki_eval`
+合并后，让 Hermes 或本地 agent 检查断链、缺失 frontmatter 和无依据表述。
 
 ## Hermes 项目提示词
 
 配置 Hermes 时，可以使用下面这段项目级说明：
 
 ```text
-你正在维护一个 wikiR vault。用户不应该手动运行 harness 命令；你需要在后台调用 wikiR 工具。
+你正在维护一个 wikiR vault。wikiR 不提供自制 harness；请使用你自己的本地文件读取、搜索、OCR 和写作能力。
 
-工作目录是当前 vault 根目录。先阅读 AGENTS.md、harness/tool_manifest.json 和 90_System/prompts/。
+工作目录是当前 vault 根目录。先阅读 AGENTS.md 和 90_System/prompts/。
 
-处理新材料时，调用 wiki_ingest，再整理 01_Sources 中的源卡，必要时沉淀到 02_Notes。
+处理新材料时，读取 00_Inbox/materials 中的文件，在 01_Sources 中创建源卡，必要时把稳定知识沉淀到 02_Notes。
 
-回答资料查找类问题时，先调用 wiki_build_index，再调用 wiki_search。
+回答资料查找类问题时，搜索 01_Sources、02_Notes、03_Projects、04_Outputs 和相关原始材料。
 
-写申报书、方案、报告、总结等复用型任务时，先调用 wiki_build_index，再调用 wiki_context，读取 90_System/context/last_context.md 后再写作。
+写申报书、方案、报告、总结等复用型任务时，先收集证据，再基于证据写作。可行时引用源卡或笔记。
 
-重要修改后调用 wiki_doctor；修改检索逻辑或 eval cases 后调用 wiki_eval。
+重要修改后，检查断链、YAML properties、source_path、无依据表述，以及私人材料是否被误加入暂存区。
 
 不要上传文件，不要删除原始材料，不要把检索不到的内容编造成事实。
 ```
 
-## 调试工具层
+## 文档解析策略
 
-CLI 是确定性实现和调试兜底，不是日常用户入口。
+文档解析属于运行时职责。
 
-验证 JSON 工具适配器：
+Hermes 或选定的本地 runtime 应该负责：
 
-```sh
-python3 harness/wiki_tool.py '{"tool":"wiki_doctor","args":{}}'
-python3 harness/wiki_tool.py '{"tool":"wiki_search","args":{"query":"本地知识库 申报书","top_k":5}}'
-python3 harness/wiki_tool.py '{"tool":"wiki_eval","args":{}}'
-```
+- Word 文件，包括旧版 `.doc`；
+- PDF，包括可用 OCR 处理的扫描 PDF；
+- 表格和演示文稿；
+- 图片和附件；
+- 纯文本和 Markdown。
 
-必要时验证底层 CLI：
-
-```sh
-python3 harness/wiki.py doctor
-python3 harness/wiki.py eval
-```
+如果解析失败，智能体应该报告失败原因，保持原始文件不动，并在必要时要求用户提供转换后或 OCR 后的文件。
 
 ## 公开推送安全检查
 
@@ -110,12 +79,10 @@ python3 harness/wiki.py eval
 ```sh
 git status --short --ignored
 git check-ignore -v 00_Inbox/materials/*
-git check-ignore -v 90_System/context/last_context.md
-git check-ignore -v 90_System/index/wiki_index.jsonl
 git add -n .
 ```
 
-暂存区里应该只有模板文件、提示词、harness 代码、文档和安全示例。
+暂存区里应该只有模板文件、提示词、文档和安全示例。
 
 ## 私有原始材料管理方式
 

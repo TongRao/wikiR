@@ -1,14 +1,14 @@
 # 公开模板与私有 Vault 工作流
 
-这个仓库应该作为 wikiR 的开源模板和 harness 项目维护，不应该直接作为真实个人资料库使用。
+这个仓库应该作为 wikiR 的开源模板维护，不应该直接作为真实个人资料库使用。
 
 ## 推荐拆分
 
 使用两个仓库：
 
 - 公开仓库：`wikiR`
-  - 用途：架构、harness、提示词、模板、文档、评估示例。
-  - 不提交真实原始材料、私人附件、生成的上下文、索引、日志或密钥。
+  - 用途：vault 结构、智能体工作契约、提示词、模板、文档和安全示例。
+  - 不提交真实原始材料、私人附件、生成草稿、日志或密钥。
 - 私有仓库：你的真实个人 vault。
   - 用途：真实源卡、笔记、项目草稿、输出，以及可选的原始材料。
   - 可以从公开模板拉取更新。
@@ -22,10 +22,9 @@
 - `.gitignore`
 - `.gitattributes`
 - `.obsidian/app.json`
-- `harness/`
 - `90_System/prompts/`
 - `90_System/templates/`
-- `90_System/evals/`
+- `docs/`
 - 不包含隐私的示例笔记或示例源卡。
 
 建议忽略：
@@ -33,8 +32,6 @@
 - `00_Inbox/materials/`
 - `00_Inbox/triage/`
 - `80_Attachments/`
-- `90_System/index/`
-- `90_System/context/`
 - `90_System/logs/`
 - `.env*`
 - Obsidian 本地工作区状态。
@@ -45,29 +42,27 @@
 
 ```sh
 cd /Users/tongrao/Desktop/project
-git clone <PUBLIC_WIKIR_REPO_URL> wikiR-private
-cd wikiR-private
+git clone <PUBLIC_WIKIR_REPO_URL> my-wikiR
+cd my-wikiR
 git remote rename origin upstream
 git remote add origin <PRIVATE_WIKIR_VAULT_REPO_URL>
 git branch -M main
 git push -u origin main
 ```
 
-然后把 `/Users/tongrao/Desktop/project/wikiR-private` 作为 Obsidian vault 和 Hermes 工作目录。
+然后把 `/Users/tongrao/Desktop/project/my-wikiR` 作为 Obsidian vault 和 Hermes 工作目录。
 
 ## 同步模板更新
 
 当公开模板有更新：
 
 ```sh
-cd /Users/tongrao/Desktop/project/wikiR-private
+cd /Users/tongrao/Desktop/project/my-wikiR
 git fetch upstream
 git merge upstream/main
 ```
 
-合并后，让 Hermes 或本地 agent 调用 `wiki_doctor` 检查 vault 状态。
-
-如果你想保持更干净的历史，也可以用 `git rebase upstream/main` 代替 merge。
+合并后，让 Hermes 或本地 agent 检查断链、缺失元数据和无依据表述。
 
 ## 在私有仓库中管理真实材料
 
@@ -124,11 +119,9 @@ git commit -m "Track private vault materials"
 ```sh
 git status --short --ignored
 git check-ignore -v 00_Inbox/materials/*
-git check-ignore -v 90_System/context/last_context.md
-git check-ignore -v 90_System/index/wiki_index.jsonl
 ```
 
-只有私人材料和生成产物应该出现在 ignored 列表里。
+只有私人材料和本地产物应该出现在 ignored 列表里。
 
 提交前检查暂存区：
 

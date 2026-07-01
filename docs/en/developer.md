@@ -2,16 +2,16 @@
 
 [简体中文](../zh/developer.md) | [README](../../README.md)
 
-This guide is for maintainers and people integrating wikiR with a local agent runtime. The public README is intentionally user-facing; implementation details, private-vault setup, and debugging notes live here.
+This guide is for maintainers of the wikiR template. wikiR is intentionally a vault protocol and documentation project, not a custom Python harness.
 
 ## Repository Strategy
 
 Use two repositories:
 
-- Public template repository: architecture, harness, prompts, templates, examples, and documentation.
+- Public template repository: folder structure, agent contract, prompts, templates, examples, and documentation.
 - Private vault repository: real source cards, notes, project outputs, and optionally raw materials.
 
-The public repository should not contain private materials, generated indexes, generated context, logs, secrets, or local Obsidian workspace state.
+The public repository should not contain private materials, private attachments, generated scratch files, logs, secrets, or local Obsidian workspace state.
 
 ## Create a Private Vault
 
@@ -36,72 +36,41 @@ git fetch upstream
 git merge upstream/main
 ```
 
-After merging, ask Hermes or your local agent to call `wiki_doctor`.
-
-## Agent Tool Layer
-
-Tool definitions live in:
-
-```text
-harness/tool_manifest.json
-```
-
-The JSON adapter is:
-
-```text
-harness/wiki_tool.py
-```
-
-Hermes or another runtime should bind these tools and call them automatically. Users should normally make natural-language requests instead of running terminal commands.
-
-Tool names:
-
-- `wiki_init`
-- `wiki_ingest`
-- `wiki_build_index`
-- `wiki_search`
-- `wiki_context`
-- `wiki_doctor`
-- `wiki_eval`
+After merging, ask Hermes or your local agent to inspect the vault for broken links, missing frontmatter, and unsupported claims.
 
 ## Hermes Project Prompt
 
 Use this as a project-level instruction when configuring Hermes:
 
 ```text
-You are maintaining a wikiR vault. The user should not manually run harness commands; you must call wikiR tools in the background.
+You are maintaining a wikiR vault. wikiR does not provide a custom harness; use your native local file reading, search, OCR, and writing capabilities.
 
-The working directory is the vault root. First read AGENTS.md, harness/tool_manifest.json, and 90_System/prompts/.
+The working directory is the vault root. First read AGENTS.md and 90_System/prompts/.
 
-When processing new materials, call wiki_ingest, then curate the generated source cards in 01_Sources and promote durable knowledge to 02_Notes when useful.
+When processing new materials, read files from 00_Inbox/materials, create source cards in 01_Sources, and promote durable knowledge to 02_Notes when useful.
 
-For material lookup questions, call wiki_build_index and then wiki_search.
+For material lookup questions, search 01_Sources, 02_Notes, 03_Projects, 04_Outputs, and relevant raw materials.
 
-For proposals, plans, reports, summaries, and other reuse-heavy writing tasks, call wiki_build_index and then wiki_context. Read 90_System/context/last_context.md before drafting.
+For proposals, plans, reports, summaries, and other reuse-heavy writing tasks, gather evidence first, then draft from the evidence. Cite source cards or notes where practical.
 
-After important edits, call wiki_doctor. After retrieval logic or eval-case changes, call wiki_eval.
+After important edits, inspect broken links, YAML properties, source paths, unsupported claims, and accidental staging of private materials.
 
 Do not upload files, do not delete raw materials, and do not invent facts that were not retrieved or otherwise provided.
 ```
 
-## Debug the Tool Layer
+## Document Extraction Policy
 
-The CLI exists as deterministic implementation and debug fallback. It is not the intended daily user interface.
+Document extraction is a runtime responsibility.
 
-Validate the JSON tool adapter:
+Hermes or the chosen local runtime should handle:
 
-```sh
-python3 harness/wiki_tool.py '{"tool":"wiki_doctor","args":{}}'
-python3 harness/wiki_tool.py '{"tool":"wiki_search","args":{"query":"local knowledge base proposal","top_k":5}}'
-python3 harness/wiki_tool.py '{"tool":"wiki_eval","args":{}}'
-```
+- Word files, including legacy `.doc`;
+- PDFs, including scanned PDFs through OCR when available;
+- spreadsheets and presentations;
+- images and attachments;
+- raw text and Markdown.
 
-Validate the underlying CLI when needed:
-
-```sh
-python3 harness/wiki.py doctor
-python3 harness/wiki.py eval
-```
+If extraction fails, the agent should report the failure, keep the raw file untouched, and ask for a converted or OCRed file when needed.
 
 ## Public Push Safety Checklist
 
@@ -110,12 +79,10 @@ Before committing to the public repository:
 ```sh
 git status --short --ignored
 git check-ignore -v 00_Inbox/materials/*
-git check-ignore -v 90_System/context/last_context.md
-git check-ignore -v 90_System/index/wiki_index.jsonl
 git add -n .
 ```
 
-Only template files, prompts, harness code, docs, and safe examples should be staged.
+Only template files, prompts, docs, and safe examples should be staged.
 
 ## Private Raw Material Options
 
