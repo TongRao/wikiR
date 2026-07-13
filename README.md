@@ -1,66 +1,160 @@
 # wikiR
 
-[简体中文](docs/zh/README.md) | [Developer guide](docs/en/developer.md)
+wikiR is a local material-management workspace for Hermes Agent, document parsing, material archiving, wiki generation, and Obsidian-based review.
 
-wikiR is a local-first template for building an agent-maintained personal knowledge vault. It is designed for Obsidian, Hermes-style local agents, and local LLM workflows.
+The project does not require Obsidian to open the whole repository. Obsidian should open only the `wiki/` directory.
 
-The project provides a vault structure, an agent contract, prompt profiles, and note templates so your materials can be curated, searched, and reused without relying on a cloud knowledge base or a custom Python toolchain.
+## What It Does
 
-## Why wikiR
+1. Users drop raw files into `00_inbox/`.
+2. Hermes calls the project MCP server when the user says "process inbox" or "处理文件".
+3. The MCP tools parse supported files into Markdown, metadata JSON, CSV tables, and reports.
+4. Raw files are archived under `01_raw_archive/`.
+5. Hermes uses parsed outputs to create material indexes, wiki candidates, reusable passages, and project drafts.
 
-- Local first: raw materials and notes stay in your vault by default.
-- Agent maintained: users work in natural language while the local agent reads, searches, and writes in the background.
-- Obsidian compatible: notes are plain Markdown with flat YAML properties and wikilinks.
-- Evidence oriented: raw materials become traceable source cards before they are reused.
-- Runtime agnostic: Hermes or another local agent can use its own file readers, OCR, search, and document tools.
-- Human maintainable: the system is mostly folders, prompts, templates, and conventions.
-
-## How It Works
+## Directory Layout
 
 ```text
-raw materials
-  -> source cards
-  -> durable notes
-  -> project workspaces
-  -> grounded drafts and outputs
+.
+├── 00_inbox/
+├── 01_raw_archive/
+│   └── YYYY/
+├── 02_parsed/
+│   └── YYYY/
+├── 03_materials/
+├── wiki/
+│   ├── 00_home.md
+│   ├── 01_wiki/
+│   │   ├── ai_tech/
+│   │   ├── power_grid/
+│   │   ├── writing_methods/
+│   │   └── _pending/
+│   ├── 02_projects/
+│   ├── 03_reusable/
+│   │   ├── _pending/
+│   │   ├── technical_routes/
+│   │   ├── result_indicators/
+│   │   └── common_phrases/
+│   ├── 04_templates/
+│   ├── 05_index/
+│   └── 99_attachments/
+├── 05_drafts/
+├── 06_logs/
+├── 07_config/
+├── 08_MCP/
+└── scripts/
 ```
 
-Users should not need to run maintenance commands manually. A local agent reads `AGENTS.md`, follows the prompts and templates in `90_System/`, and writes curated notes or outputs back into the vault.
+## Install Dependencies
 
-## Core Layout
+Create a virtual environment, then install the MCP server dependencies:
 
-- `00_Inbox/materials/`: raw material inbox.
-- `01_Sources/`: source cards generated from raw materials.
-- `02_Notes/`: durable notes and reusable knowledge.
-- `03_Projects/`: active project workspaces.
-- `04_Outputs/`: drafts, proposals, reports, and other deliverables.
-- `80_Attachments/`: Obsidian attachments.
-- `90_System/`: prompts, templates, and agent-facing system guidance.
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r 08_MCP/requirements.txt
+```
 
-## Typical Use
+`08_MCP/requirements.txt` includes:
 
-1. Create a private vault from this template.
-2. Open the private vault in Obsidian.
-3. Set Hermes or another local agent to use the vault as its working directory.
-4. Add new materials to `00_Inbox/materials/`.
-5. Ask the agent to curate materials, find reusable evidence, or draft an output.
+- `mcp`: MCP server runtime.
+- `markitdown[docx,pdf,pptx]`: required for `.docx`, `.pdf`, `.pptx`, and other common document-to-Markdown conversion.
+- `openpyxl`: required for `.xlsx` / `.xlsm` sheet extraction.
+- `python-docx`: reserved as a Word fallback dependency.
 
-Example requests:
+Verify the key packages after installation:
 
-- "I added new materials. Please curate them."
-- "Find reusable materials related to this project."
-- "Draft a proposal from the existing vault materials."
-- "Check whether this vault has broken links or unsupported claims."
+```sh
+.venv/bin/python -c "import mcp, markitdown, openpyxl; print('dependencies ok')"
+```
 
-## Documentation
+If you previously installed plain `markitdown` and PDF/DOCX conversion fails with a missing optional dependency error, reinstall:
 
-- [Architecture](docs/en/architecture.md)
-- [Agent operating protocol](docs/en/agent-runtime.md)
-- [Open-source template and private vault workflow](docs/en/open-source-template-and-private-vault.md)
-- [Developer guide](docs/en/developer.md)
+```sh
+.venv/bin/pip install -U "markitdown[docx,pdf,pptx]"
+```
 
-## Safety Defaults
+The first version uses MarkItDown for common document conversion and OpenPyXL for Excel extraction. OCR-heavy workflows should be added later as an explicit extension.
 
-The default `.gitignore` excludes raw materials, attachments, logs, secrets, and local Obsidian workspace state. This keeps the public template safe by default.
+## Initialize Workspace
 
-For real personal use, maintain this repository as a public template and keep your actual vault in a separate private repository.
+```sh
+python scripts/init_workspace.py
+```
+
+This creates the required folders and base files without overwriting existing files.
+
+## Start MCP Server
+
+```sh
+bash scripts/start_mcp.sh
+```
+
+The script starts `08_MCP/material_mcp_server.py` with stdio transport. If `.venv/` does not exist, it prints setup instructions and exits. It does not install dependencies automatically.
+
+When the MCP server starts successfully, the script prints a short status message to stderr, then waits for Hermes MCP messages over stdio. Seeing no further output after the startup message is normal.
+
+## Process Inbox Manually
+
+Hermes should normally call the MCP tool. This command is only for local smoke tests:
+
+```sh
+python scripts/process_inbox_cli.py --mode fast
+```
+
+Supported first-version formats:
+
+- `.docx`
+- `.pdf`
+- `.xlsx`
+- `.xlsm`
+- `.pptx`
+- `.txt`
+- `.md`
+
+## Naming Rules
+
+Successful parsing uses the same canonical name for parsed folders, archived originals, and source copies:
+
+```text
+类别_YYYYMMDD_文件名_hash
+```
+
+Examples:
+
+- `政策_20260701_2027年工业领域科技计划项目申报指南_d6108b84`
+- `申报书_20260701_重点研发计划项目申报书_1a2b3c4d`
+
+The parser keeps the useful part of the original filename, removes leading attachment markers such as `附件3：`, and classifies the material with lightweight local rules. Current built-in categories include `政策`, `报奖`, `申报书`, `合同`, `表格`, and fallback `材料`.
+
+Parsed outputs are grouped by year under `02_parsed/YYYY/`. Archived originals are grouped by year under `01_raw_archive/YYYY/`.
+
+## Connect Hermes
+
+Configure Hermes to start the MCP server with:
+
+```sh
+bash scripts/start_mcp.sh
+```
+
+When the user says "process inbox" or "处理文件", Hermes should call `process_inbox`. For individual files, it can call `convert_document` or `extract_excel_workbook`.
+
+## Obsidian
+
+Open only:
+
+```text
+wiki/
+```
+
+Generated wiki candidates are written to `wiki/01_wiki/_pending/` for review before being moved into final wiki folders.
+
+## Safety Boundaries
+
+- All tool reads and writes are restricted to the project root.
+- Tools must not access `~/.ssh`, `~/.gnupg`, browser profiles, system keychains, or any path outside this repository.
+- Raw files are never deleted as the only copy.
+- Parsed outputs and archive movement happen only after conversion succeeds.
+- If conversion fails, the original file remains in `00_inbox/` and a concise failure log is written under `06_logs/`.
+- Existing files under `01_raw_archive/` are not overwritten; name conflicts get a timestamp/hash suffix.
+- MCP responses are concise JSON and do not return long document bodies.
+- Failures generate a concise log under `06_logs/` instead of failing silently.

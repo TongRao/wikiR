@@ -1,58 +1,43 @@
-# wikiR Agent Contract
+# wikiR Agent Guide
 
-wikiR is an Obsidian-compatible vault structure and agent operating protocol. It does not provide or require a custom Python harness. Use the agent runtime's native file reading, search, OCR, and writing capabilities.
+wikiR is a local material-management workspace for document parsing, material archiving, wiki generation, and Obsidian use. Hermes should work inside this project root and use the project MCP server for file processing.
 
 ## Hard Rules
 
-1. Work locally by default. Do not upload, sync, or call network services unless the user explicitly asks.
-2. Treat raw materials as append-only evidence. Do not delete, overwrite, or move files in `00_Inbox/materials/` without explicit user approval.
-3. In the public template repository, never commit real private materials, private attachments, secrets, generated scratch files, or local Obsidian workspace state.
-4. Use flat Obsidian YAML properties. Avoid nested frontmatter; keep properties short and machine-readable.
-5. Users should interact in natural language. Do not ask users to run maintenance commands for normal wiki work.
-6. Use Hermes or the current agent runtime's native tools to read files, search the vault, convert documents, and perform OCR when needed.
-7. Ground writing in retrieved notes, source cards, and raw materials. If evidence is missing or extraction fails, say so clearly and list the gap.
-8. Keep notes concise. Promote only stable, reusable ideas into `02_Notes/`; keep project-specific drafts in `03_Projects/` or `04_Outputs/`.
+1. Stay inside the current project root. Do not access files outside this workspace.
+2. Do not read sensitive user locations such as `~/.ssh`, `~/.gnupg`, browser profiles, system keychains, or any path outside the project root.
+3. Do not directly process raw `docx`, `pdf`, `xlsx`, `pptx`, or similar originals in long-form reasoning. When the user says "process inbox" or "处理文件", call the MCP tool first.
+4. Original files must be archived. Never delete the only copy of a raw file.
+5. Use Markdown, CSV, and JSON under `02_parsed/` as the main working versions after processing.
+6. Obsidian should open `wiki/`, not the project root.
+7. Wiki candidate pages must first be written to `wiki/01_wiki/_pending/`.
+8. Do not run `git commit`, `git push`, or dependency installation unless the user explicitly asks.
+9. Keep responses formal, pragmatic, and suitable for project-material writing.
 
-## Vault Areas
+## Normal Workflow
 
-- `00_Inbox/materials/`: new raw materials waiting for agent curation.
-- `01_Sources/`: source cards generated from raw materials.
-- `02_Notes/`: durable atomic notes and reusable knowledge.
-- `03_Projects/`: active project workspaces.
-- `04_Outputs/`: generated reports, applications, proposals, and polished drafts.
-- `80_Attachments/`: images, PDFs, and other Obsidian attachments.
-- `90_System/`: prompts, templates, and agent-facing system guidance.
+1. User puts new files into `00_inbox/`.
+2. User asks Hermes to "process inbox" or "处理文件".
+3. Hermes calls the MCP server tool `process_inbox`.
+4. The MCP tool archives raw files under `01_raw_archive/YYYY/` and writes parsed Markdown/CSV/JSON/report files under `02_parsed/YYYY/`.
+5. Hermes uses parsed outputs to create or update material indexes, wiki candidate pages, reusable passages, and project drafts.
 
-## Workflows
+Successful parse names follow:
 
-### New Material
+```text
+类别_YYYYMMDD_文件名_hash
+```
 
-1. User places files in `00_Inbox/materials/`.
-2. Agent reads the material with native runtime capabilities.
-3. Agent creates or updates source cards in `01_Sources/` using `90_System/templates/source-note.md`.
-4. Agent uses `90_System/prompts/curator.md` to fill summary, core points, reusable fragments, links, and next actions.
-5. If a concept is reusable across projects, create or update a note in `02_Notes/` with links back to the source card.
+The MCP tools preserve the meaningful original filename, remove leading attachment labels such as `附件3：`, classify the material with local rules and converted-text hints, and use the same canonical name for the parsed folder, archived original, and parsed source copy. If conversion fails, no parsed item or archive copy should be created; the original remains in `00_inbox/`, and a failure log is written under `06_logs/`.
 
-### Search and Reuse
+## Important Locations
 
-1. Agent searches `01_Sources/`, `02_Notes/`, `03_Projects/`, `04_Outputs/`, and relevant raw materials.
-2. Agent reads the strongest matching materials directly.
-3. Agent drafts the answer or output with citations to source cards and notes.
-4. If search or extraction is incomplete, state the limitation before writing.
-5. Store substantial deliverables in `04_Outputs/`.
-
-### Quality Gate
-
-Before large reorganizations, public commits, or important outputs, the agent should inspect:
-
-- broken or stale wikilinks;
-- missing required YAML properties;
-- source cards without `source_path` or usable excerpts;
-- outputs that make unsupported claims;
-- private materials accidentally staged for public release.
-
-## Prompt Profiles
-
-- Curate new material: `90_System/prompts/curator.md`
-- Retrieve and write grounded output: `90_System/prompts/retrieval-writer.md`
-- Evaluate retrieval and answer quality: `90_System/prompts/evaluator.md`
+- `00_inbox/`: user drop zone for new raw files.
+- `01_raw_archive/`: archived originals.
+- `02_parsed/`: parsed Markdown, metadata, tables, images, and processing reports.
+- `03_materials/`: generated material indexes.
+- `wiki/`: Obsidian vault.
+- `05_drafts/`: draft outputs.
+- `06_logs/`: local logs.
+- `07_config/`: local configuration.
+- `08_MCP/`: MCP server and tool implementation.
